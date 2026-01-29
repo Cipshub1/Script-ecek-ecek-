@@ -6,7 +6,7 @@ local LP = game:GetService("Players").LocalPlayer
 local UIS = game:GetService("UserInputService")
 
 -- CONFIG
-local CorrectKey = "CIPSHUB-FREE-2026"
+local CorrectKey = "bayar"
 local KeyLink = "https://chat.whatsapp.com/C9lws7uXig62tX1xcVnhfS?mode=gi_t"
 local RawScript = "https://raw.githubusercontent.com/Cipshub1/Script-ecek-ecek-/refs/heads/main/PANTEK.lua"
 
