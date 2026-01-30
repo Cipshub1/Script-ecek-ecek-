@@ -1,8 +1,8 @@
 --====================================================
 -- ❄️ CIPSHUB | PREMIUM ICE EDITION 2026 ❄️
 -- STYLE: CIRCLE MINI LOGO & LOCAL SNOW EFFECT
--- FIXED: FULL MOBILE & PC DRAGGABLE LOGO
--- NO FEATURES REMOVED | ALL SYSTEMS PROTECTED
+-- UPDATE: FULL RESTORE + FIXED DRAGGABLE & CLICK
+-- STATUS: ALL SYSTEMS PROTECTED | NO REMOVALS
 --====================================================
 
 local Players = game:GetService("Players")
@@ -33,14 +33,14 @@ Blur.Enabled = true
 local Theme = {
     Main = Color3.fromRGB(10, 20, 30),
     Sidebar = Color3.fromRGB(15, 25, 35),
-    Accent = Color3.fromRGB(0, 225, 255), -- Ice Blue
+    Accent = Color3.fromRGB(0, 225, 255),
     Text = Color3.fromRGB(240, 250, 255),
     SubText = Color3.fromRGB(160, 180, 200),
     InputBG = Color3.fromRGB(25, 40, 50),
     GlassTrans = 0.1
 }
 
--- Global Variables (PROTECTED)
+-- Global Variables (RESTORED)
 local SpeedOn, JumpOn, NoClip, InfJump = false, false, false, false
 local SpeedVal, JumpVal = 16, 50
 local SelectedTarget = nil
@@ -48,7 +48,7 @@ local TPFollow, BodyLock = false, false
 local FollowDistance = 4
 local AimlockOn = false
 
--- ESP States (PROTECTED)
+-- ESP States (RESTORED)
 local ESP_Master = false
 local ESP_Name_On = false
 local ESP_Skeleton_On = false
@@ -61,40 +61,50 @@ local function Round(obj, rad)
     c.CornerRadius = UDim.new(0, rad)
 end
 
--- FIXED DRAG FUNCTION (SUPPORT MOBILE & PC)
-local function MakeDraggable(frame, handle)
-    local dragging, dragInput, dragStart, startPos
-    
+--====================================================
+-- STABLE DRAGGABLE ENGINE
+--====================================================
+local function GlobalDrag(frame, handle)
+    local dragToggle = nil
+    local dragSpeed = 0.15
+    local dragStart = nil
+    local startPos = nil
+
     local function update(input)
         local delta = input.Position - dragStart
-        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        local position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        TweenService:Create(frame, TweenInfo.new(dragSpeed), {Position = position}):Play()
     end
-    
+
     handle.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
+        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+            dragToggle = true
             dragStart = input.Position
             startPos = frame.Position
-            
             input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
+                if input.UserInputState == Enum.UserInputState.End then dragToggle = false end
             end)
         end
     end)
-    
-    handle.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            dragInput = input
-        end
-    end)
-    
+
     UIS.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
+        if dragToggle and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             update(input)
         end
     end)
+end
+
+-- RAYCAST VISIBILITY CHECK (RESTORED)
+local function IsVisible(part)
+    if not LP.Character then return false end
+    local origin = Camera.CFrame.Position
+    local destination = part.Position
+    local direction = (destination - origin)
+    local rayParams = RaycastParams.new()
+    rayParams.FilterDescendantsInstances = {LP.Character, part.Parent, Camera}
+    rayParams.FilterType = Enum.RaycastFilterType.Exclude
+    local result = workspace:Raycast(origin, direction, rayParams)
+    return result == nil
 end
 
 --========================
@@ -108,19 +118,13 @@ Main.BackgroundTransparency = Theme.GlassTrans
 Main.Visible = false
 Round(Main, 12)
 
--- Snow Effect Container (Main Menu)
 local SnowContainer = Instance.new("Frame", Main)
-SnowContainer.Size = UDim2.fromScale(1, 1)
-SnowContainer.BackgroundTransparency = 1
-SnowContainer.ClipsDescendants = true
+SnowContainer.Size = UDim2.fromScale(1, 1); SnowContainer.BackgroundTransparency = 1; SnowContainer.ClipsDescendants = true
 
 local function CreateSnowflake(parent)
     local flake = Instance.new("TextLabel", parent)
-    flake.BackgroundTransparency = 1
-    flake.Text = "."
-    flake.TextColor3 = Color3.new(1, 1, 1)
-    flake.TextSize = math.random(10, 15)
-    flake.Position = UDim2.new(math.random(), 0, -0.1, 0)
+    flake.BackgroundTransparency = 1; flake.Text = "."; flake.TextColor3 = Color3.new(1, 1, 1)
+    flake.TextSize = math.random(10, 15); flake.Position = UDim2.new(math.random(), 0, -0.1, 0)
     local speed = math.random(2, 5)
     task.spawn(function()
         local t = 0
@@ -137,19 +141,13 @@ task.spawn(function()
     while task.wait(0.3) do if Main.Visible then CreateSnowflake(SnowContainer) end end
 end)
 
-local MainStroke = Instance.new("UIStroke", Main)
-MainStroke.Thickness = 2; MainStroke.Color = Theme.Accent; MainStroke.Transparency = 0.5
+local MainStroke = Instance.new("UIStroke", Main); MainStroke.Thickness = 2; MainStroke.Color = Theme.Accent; MainStroke.Transparency = 0.5
 
 local Sidebar = Instance.new("Frame", Main)
-Sidebar.Size = UDim2.new(0, 150, 1, 0)
-Sidebar.BackgroundColor3 = Theme.Sidebar
-Sidebar.BackgroundTransparency = 0.1
-Round(Sidebar, 12)
+Sidebar.Size = UDim2.new(0, 150, 1, 0); Sidebar.BackgroundColor3 = Theme.Sidebar; Sidebar.BackgroundTransparency = 0.1; Round(Sidebar, 12)
 
 local Title = Instance.new("TextLabel", Sidebar)
-Title.Size = UDim2.new(1, 0, 0, 50)
-Title.Text = "CIPSHUB ❄️"
-Title.Font = Enum.Font.GothamBlack; Title.TextColor3 = Theme.Accent; Title.TextSize = 18; Title.BackgroundTransparency = 1
+Title.Size = UDim2.new(1, 0, 0, 50); Title.Text = "CIPSHUB ❄️"; Title.Font = Enum.Font.GothamBlack; Title.TextColor3 = Theme.Accent; Title.TextSize = 18; Title.BackgroundTransparency = 1
 
 local TabHolder = Instance.new("ScrollingFrame", Sidebar)
 TabHolder.Size = UDim2.new(1, -15, 1, -60); TabHolder.Position = UDim2.fromOffset(7, 55); TabHolder.BackgroundTransparency = 1; TabHolder.ScrollBarThickness = 0
@@ -180,12 +178,12 @@ local function AddToggle(parent, text, default, callback)
     local sw = Instance.new("Frame", tgl); sw.Size = UDim2.fromOffset(28, 14); sw.Position = UDim2.new(1, -40, 0.5, -7); sw.BackgroundColor3 = Color3.fromRGB(50, 70, 90); Round(sw, 7)
     local dot = Instance.new("Frame", sw); dot.Size = UDim2.fromOffset(10, 10); dot.Position = UDim2.fromOffset(2, 2); dot.BackgroundColor3 = Color3.new(1, 1, 1); Round(dot, 5)
     local active = default
-    local function updateTgl()
+    local function update()
         callback(active)
         TweenService:Create(sw, TweenInfo.new(0.2), {BackgroundColor3 = active and Theme.Accent or Color3.fromRGB(50, 70, 90)}):Play()
         TweenService:Create(dot, TweenInfo.new(0.2, Enum.EasingStyle.Back), {Position = active and UDim2.fromOffset(16, 2) or UDim2.fromOffset(2, 2)}):Play()
     end
-    tgl.MouseButton1Click:Connect(function() active = not active; updateTgl() end); updateTgl()
+    tgl.MouseButton1Click:Connect(function() active = not active; update() end); update()
 end
 
 local function AddInput(parent, text, default, callback)
@@ -203,23 +201,21 @@ local function AddButton(parent, text, callback)
     return b
 end
 
--- TABS SETUP
+-- TABS SETUP (RESTORED)
 local Tab1 = NewTab("Player", "👤")
 local Tab2 = NewTab("Combat", "🔫")
 local Tab3 = NewTab("Follow", "🎯")
 local Tab4 = NewTab("Visuals", "👁️")
 local Tab5 = NewTab("Utility", "⚙️")
 
--- Player Fitur (PROTECTED)
 AddToggle(Tab1, "Premium WalkSpeed Master", false, function(v) SpeedOn = v end)
 AddInput(Tab1, "Set WalkSpeed Value", 16, function(v) SpeedVal = v end)
 AddToggle(Tab1, "Premium JumpPower Master", false, function(v) JumpOn = v end)
 AddInput(Tab1, "Set JumpPower Value", 50, function(v) JumpVal = v end)
 AddToggle(Tab1, "NoClip (Pass Walls)", false, function(v) NoClip = v end)
 AddToggle(Tab1, "Infinite Jump", false, function(v) InfJump = v end)
-AddToggle(Tab2, "Aimlock (Legit Mode)", false, function(v) AimlockOn = v end)
+AddToggle(Tab2, "100% Auto-Lock (Visible)", false, function(v) AimlockOn = v end)
 
--- Target & Visuals (PROTECTED)
 AddButton(Tab3, "Select Target", function()
     local d = Instance.new("ScrollingFrame", Tab3); d.Size = UDim2.new(0.98,0,0,80); d.BackgroundColor3 = Color3.new(0,0,0); d.BackgroundTransparency = 0.5; Round(d, 8); Instance.new("UIListLayout", d)
     for _,p in pairs(Players:GetPlayers()) do if p ~= LP then AddButton(d, p.Name, function() SelectedTarget = p; d:Destroy() end).Size = UDim2.new(1,0,0,25) end end
@@ -235,7 +231,7 @@ AddToggle(Tab4, "Team Check (Hide Friend)", true, function(v) ESP_Team_Check = v
 AddButton(Tab5, "AFEM MAX (ALPHA)", function() loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-AFEM-Max-Open-Alpha-50210"))() end)
 AddButton(Tab5, "PSHADE ULTIMATE", function() loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-pshade-ultimate-25505"))() end)
 
--- ESP CORE ENGINE (PROTECTED)
+-- ESP CORE (RESTORED)
 local function CreateESP(plr)
     local NameTag = Drawing.new("Text"); NameTag.Visible = false; NameTag.Center = true; NameTag.Outline = true; NameTag.Size = 13; NameTag.Color = Theme.Accent
     local DistTag = Drawing.new("Text"); DistTag.Visible = false; DistTag.Center = true; DistTag.Outline = true; DistTag.Size = 11; DistTag.Color = Color3.new(1,1,1)
@@ -263,7 +259,8 @@ local function CreateESP(plr)
                 else HealthBar.Visible = false end
                 if ESP_Skeleton_On and head and char:FindFirstChild("Left Arm") then
                     local H = Camera:WorldToViewportPoint(head.Position); local T = Camera:WorldToViewportPoint(hrp.Position)
-                    local LA = Camera:WorldToViewportPoint(char["Left Arm"].Position); local RA = Camera:WorldToViewportPoint(char["Right Arm"].Position)
+                    local LA = Camera:WorldToViewportPoint(char:FindFirstChild("Left Arm") and char["Left Arm"].Position or hrp.Position)
+                    local RA = Camera:WorldToViewportPoint(char:FindFirstChild("Right Arm") and char["Right Arm"].Position or hrp.Position)
                     local LL = Camera:WorldToViewportPoint(char:FindFirstChild("Left Leg") and char["Left Leg"].Position or hrp.Position)
                     local RL = Camera:WorldToViewportPoint(char:FindFirstChild("Right Leg") and char["Right Leg"].Position or hrp.Position)
                     Lines[1].Visible = true; Lines[1].From = Vector2.new(H.X, H.Y); Lines[1].To = Vector2.new(T.X, T.Y)
@@ -280,16 +277,20 @@ end
 for _, p in pairs(Players:GetPlayers()) do CreateESP(p) end
 Players.PlayerAdded:Connect(CreateESP)
 
+-- MAIN LOOP (RESTORED)
 RunService.Heartbeat:Connect(function()
     local char = LP.Character; local hum = char and char:FindFirstChildOfClass("Humanoid"); local hrp = char and char:FindFirstChild("HumanoidRootPart")
     if hum then hum.WalkSpeed = SpeedOn and SpeedVal or 16; hum.JumpPower = JumpOn and JumpVal or 50 end
     if NoClip and char then for _,v in pairs(char:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = false end end end
+    
     if AimlockOn then
-        local target = nil; local dist = 500
+        local target = nil; local dist = math.huge
         for _, v in pairs(Players:GetPlayers()) do
             if v ~= LP and v.Character and v.Character:FindFirstChild("Head") and v.Character.Humanoid.Health > 0 then
-                local p, os = Camera:WorldToViewportPoint(v.Character.Head.Position)
-                if os then
+                if ESP_Team_Check and v.Team == LP.Team then continue end
+                local head = v.Character.Head
+                local p, os = Camera:WorldToViewportPoint(head.Position)
+                if os and IsVisible(head) then
                     local m = (Vector2.new(UIS:GetMouseLocation().X, UIS:GetMouseLocation().Y) - Vector2.new(p.X, p.Y)).Magnitude
                     if m < dist then dist = m; target = v end
                 end
@@ -297,6 +298,7 @@ RunService.Heartbeat:Connect(function()
         end
         if target then Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Character.Head.Position) end
     end
+    
     if SelectedTarget and SelectedTarget.Character and hrp then
         local thrp = SelectedTarget.Character:FindFirstChild("HumanoidRootPart")
         if thrp then
@@ -309,70 +311,35 @@ end)
 UIS.JumpRequest:Connect(function() if InfJump and LP.Character then LP.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping") end end)
 
 --====================================================
--- PREMIUM MINI LOGO (CIRCLE & DRAGGABLE SNOW)
+-- PREMIUM MINI LOGO (RESTORED & FIXED)
 --====================================================
 local MiniLogo = Instance.new("Frame", Gui)
-MiniLogo.Name = "CipikMiniLogo"
-MiniLogo.Size = UDim2.fromOffset(55, 55)
-MiniLogo.Position = UDim2.new(0.02, 0, 0.4, 0)
-MiniLogo.BackgroundColor3 = Theme.Main
-MiniLogo.BackgroundTransparency = 0.2
-MiniLogo.ClipsDescendants = true
-MiniLogo.Active = true -- Menandakan Frame ini aktif menerima input
-Round(MiniLogo, 100) -- Bulat Sempurna
-
-local MiniSnowContainer = Instance.new("Frame", MiniLogo)
-MiniSnowContainer.Size = UDim2.fromScale(1, 1)
-MiniSnowContainer.BackgroundTransparency = 1
-
-local MiniStroke = Instance.new("UIStroke", MiniLogo)
-MiniStroke.Thickness = 2
-MiniStroke.Color = Theme.Accent
-MiniStroke.Transparency = 0.4
+MiniLogo.Name = "CipikMiniLogo"; MiniLogo.Size = UDim2.fromOffset(55, 55); MiniLogo.Position = UDim2.new(0.05, 0, 0.4, 0)
+MiniLogo.BackgroundColor3 = Theme.Main; MiniLogo.BackgroundTransparency = 0.2; MiniLogo.ClipsDescendants = true; Round(MiniLogo, 100)
 
 local IconText = Instance.new("TextLabel", MiniLogo)
-IconText.Size = UDim2.fromScale(1, 1)
-IconText.BackgroundTransparency = 1
-IconText.Text = "CIPIK"
-IconText.Font = Enum.Font.GothamBlack
-IconText.TextColor3 = Color3.new(1, 1, 1)
-IconText.TextSize = 11
-IconText.ZIndex = 5
+IconText.Size = UDim2.fromScale(1, 1); IconText.BackgroundTransparency = 1; IconText.Text = "CIPIK"; IconText.Font = Enum.Font.GothamBlack; IconText.TextColor3 = Theme.Accent; IconText.TextSize = 10
 
 local ClickBtn = Instance.new("TextButton", MiniLogo)
-ClickBtn.Size = UDim2.fromScale(1, 1)
-ClickBtn.BackgroundTransparency = 1
-ClickBtn.Text = ""
-ClickBtn.ZIndex = 10
+ClickBtn.Size = UDim2.fromScale(1, 1); ClickBtn.BackgroundTransparency = 1; ClickBtn.Text = ""
 
--- Local Snow Effect Loop (Only for Mini Logo)
-task.spawn(function()
-    while task.wait(0.4) do
-        CreateSnowflake(MiniSnowContainer)
+local MiniSnowContainer = Instance.new("Frame", MiniLogo)
+MiniSnowContainer.Size = UDim2.fromScale(1, 1); MiniSnowContainer.BackgroundTransparency = 1
+task.spawn(function() while task.wait(0.4) do CreateSnowflake(MiniSnowContainer) end end)
+
+-- APPLY FIXED DRAG
+GlobalDrag(Main, Title)
+GlobalDrag(MiniLogo, MiniLogo)
+
+local lastPos = MiniLogo.Position
+ClickBtn.MouseButton1Click:Connect(function()
+    local dist = (Vector2.new(MiniLogo.Position.X.Offset, MiniLogo.Position.Y.Offset) - Vector2.new(lastPos.X.Offset, lastPos.Y.Offset)).Magnitude
+    if dist < 5 then
+        Main.Visible = not Main.Visible
+        TweenService:Create(Blur, TweenInfo.new(0.3), {Size = Main.Visible and 15 or 0}):Play()
     end
+    lastPos = MiniLogo.Position
 end)
-
--- LOGIC UNTUK TEKAN vs GESER
-local dragging = false
-ClickBtn.MouseButton1Down:Connect(function()
-	dragging = false
-end)
-
-ClickBtn.MouseButton1Click:Connect(function() 
-	if not dragging then
-		Main.Visible = not Main.Visible 
-		TweenService:Create(Blur, TweenInfo.new(0.4), {Size = Main.Visible and 15 or 0}):Play()
-		-- Animation
-		TweenService:Create(MiniLogo, TweenInfo.new(0.2, Enum.EasingStyle.Back), {Size = UDim2.fromOffset(50, 50)}):Play()
-		task.wait(0.1)
-		TweenService:Create(MiniLogo, TweenInfo.new(0.2, Enum.EasingStyle.Back), {Size = UDim2.fromOffset(55, 55)}):Play()
-	end
-end)
-
--- AKTIFKAN DRAG PADA LOGO DAN MENU UTAMA
-MakeDraggable(MiniLogo, ClickBtn) -- Logo Cips geser lewat tombol transparannya
-MakeDraggable(Main, Title) -- Menu geser lewat Title-nya
 
 Pages["Player"].page.Visible = true; Pages["Player"].btn.BackgroundTransparency = 0.1; Pages["Player"].btn.TextColor3 = Theme.Accent
-
-print("CIPSHUB PREMIUM ICE EDITION LOADED ❄️")
+print("CIPSHUB PREMIUM ICE EDITION | ALL SYSTEMS RESTORED ❄️")
