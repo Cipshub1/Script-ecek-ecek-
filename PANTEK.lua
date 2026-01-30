@@ -1,8 +1,8 @@
 --====================================================
 -- ❄️ CIPSHUB | PREMIUM ICE EDITION 2026 ❄️
 -- STYLE: CIRCLE MINI LOGO & LOCAL SNOW EFFECT
+-- FIXED: FULL MOBILE & PC DRAGGABLE LOGO
 -- NO FEATURES REMOVED | ALL SYSTEMS PROTECTED
--- FIXED: DRAGGABLE CIRCLE "CIPIK" LOGO
 --====================================================
 
 local Players = game:GetService("Players")
@@ -61,21 +61,38 @@ local function Round(obj, rad)
     c.CornerRadius = UDim.new(0, rad)
 end
 
+-- FIXED DRAG FUNCTION (SUPPORT MOBILE & PC)
 local function MakeDraggable(frame, handle)
     local dragging, dragInput, dragStart, startPos
+    
+    local function update(input)
+        local delta = input.Position - dragStart
+        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+    
     handle.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true; dragStart = input.Position; startPos = frame.Position
-            input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
         end
     end)
-    frame.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
+    
+    handle.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
     end)
+    
     UIS.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
-            local delta = input.Position - dragStart
-            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            update(input)
         end
     end)
 end
@@ -163,12 +180,12 @@ local function AddToggle(parent, text, default, callback)
     local sw = Instance.new("Frame", tgl); sw.Size = UDim2.fromOffset(28, 14); sw.Position = UDim2.new(1, -40, 0.5, -7); sw.BackgroundColor3 = Color3.fromRGB(50, 70, 90); Round(sw, 7)
     local dot = Instance.new("Frame", sw); dot.Size = UDim2.fromOffset(10, 10); dot.Position = UDim2.fromOffset(2, 2); dot.BackgroundColor3 = Color3.new(1, 1, 1); Round(dot, 5)
     local active = default
-    local function update()
+    local function updateTgl()
         callback(active)
         TweenService:Create(sw, TweenInfo.new(0.2), {BackgroundColor3 = active and Theme.Accent or Color3.fromRGB(50, 70, 90)}):Play()
         TweenService:Create(dot, TweenInfo.new(0.2, Enum.EasingStyle.Back), {Position = active and UDim2.fromOffset(16, 2) or UDim2.fromOffset(2, 2)}):Play()
     end
-    tgl.MouseButton1Click:Connect(function() active = not active; update() end); update()
+    tgl.MouseButton1Click:Connect(function() active = not active; updateTgl() end); updateTgl()
 end
 
 local function AddInput(parent, text, default, callback)
@@ -301,8 +318,8 @@ MiniLogo.Position = UDim2.new(0.02, 0, 0.4, 0)
 MiniLogo.BackgroundColor3 = Theme.Main
 MiniLogo.BackgroundTransparency = 0.2
 MiniLogo.ClipsDescendants = true
+MiniLogo.Active = true -- Menandakan Frame ini aktif menerima input
 Round(MiniLogo, 100) -- Bulat Sempurna
-MakeDraggable(MiniLogo, MiniLogo)
 
 local MiniSnowContainer = Instance.new("Frame", MiniLogo)
 MiniSnowContainer.Size = UDim2.fromScale(1, 1)
@@ -335,16 +352,27 @@ task.spawn(function()
     end
 end)
 
-ClickBtn.MouseButton1Click:Connect(function() 
-    Main.Visible = not Main.Visible 
-    TweenService:Create(Blur, TweenInfo.new(0.4), {Size = Main.Visible and 15 or 0}):Play()
-    -- Click Animation
-    TweenService:Create(MiniLogo, TweenInfo.new(0.2, Enum.EasingStyle.Back), {Size = UDim2.fromOffset(50, 50)}):Play()
-    task.wait(0.1)
-    TweenService:Create(MiniLogo, TweenInfo.new(0.2, Enum.EasingStyle.Back), {Size = UDim2.fromOffset(55, 55)}):Play()
+-- LOGIC UNTUK TEKAN vs GESER
+local dragging = false
+ClickBtn.MouseButton1Down:Connect(function()
+	dragging = false
 end)
 
+ClickBtn.MouseButton1Click:Connect(function() 
+	if not dragging then
+		Main.Visible = not Main.Visible 
+		TweenService:Create(Blur, TweenInfo.new(0.4), {Size = Main.Visible and 15 or 0}):Play()
+		-- Animation
+		TweenService:Create(MiniLogo, TweenInfo.new(0.2, Enum.EasingStyle.Back), {Size = UDim2.fromOffset(50, 50)}):Play()
+		task.wait(0.1)
+		TweenService:Create(MiniLogo, TweenInfo.new(0.2, Enum.EasingStyle.Back), {Size = UDim2.fromOffset(55, 55)}):Play()
+	end
+end)
+
+-- AKTIFKAN DRAG PADA LOGO DAN MENU UTAMA
+MakeDraggable(MiniLogo, ClickBtn) -- Logo Cips geser lewat tombol transparannya
+MakeDraggable(Main, Title) -- Menu geser lewat Title-nya
+
 Pages["Player"].page.Visible = true; Pages["Player"].btn.BackgroundTransparency = 0.1; Pages["Player"].btn.TextColor3 = Theme.Accent
-MakeDraggable(Main, Title)
 
 print("CIPSHUB PREMIUM ICE EDITION LOADED ❄️")
